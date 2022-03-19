@@ -26,13 +26,6 @@ sem_t *sem_w;
 char *addr;
 char *buf;
 
-// void sig_handler(int signo)
-// {
-//     sem_close(sem_w);
-//     sem_close(sem_r);
-//     sem_unlink("bonjour.txt");
-// }
-
 void *wwrite(void *m)
 {
     struct stat buff;
