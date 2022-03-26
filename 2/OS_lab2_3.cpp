@@ -7,7 +7,7 @@ pthread_mutex_t mutex;
 void *thread1(void *flag)
 {
     timespec tp;
-    printf("\x1b[31mThread 1 have started\x1b[0m\n");
+    printf("\x1b[31mThread 1 has started\x1b[0m\n");
     while (*((int *)flag) != 0)
     {
         clock_gettime(CLOCK_REALTIME, &tp);
@@ -17,24 +17,24 @@ void *thread1(void *flag)
             printf("\x1b[31mTimed thread1 failed!\x1b[0m\n");
             tp.tv_sec += 2;
         }
-        printf("\x1b[32mThread 1 have locked the mutex\x1b[0m\n");
+        printf("\x1b[32mThread 1 has locked the mutex\x1b[0m\n");
         for (int i = 0; i < 5; i++)
         {
             printf("1\n");
             sleep(1);
         }
         pthread_mutex_unlock(&mutex);
-        printf("\x1b[32mThread 1 have unlocked the mutex\x1b[0m\n");
+        printf("\x1b[32mThread 1 has unlocked the mutex\x1b[0m\n");
         sleep(2);
     }
-    printf("\x1b[31mThread 1 have been finished\x1b[0m\n");
+    printf("\x1b[31mThread 1 has been finished\x1b[0m\n");
     pthread_exit(NULL);
 }
 
 void *thread2(void *flag)
 {
     timespec tp;
-    printf("\x1b[31mThread 2 have started\x1b[0m\n");
+    printf("\x1b[31mThread 2 has started\x1b[0m\n");
 
     while (*((int *)flag) != 0)
     {
@@ -46,18 +46,18 @@ void *thread2(void *flag)
             tp.tv_sec += 2;
         }
 
-        printf("\x1b[32mThread 2 have locked the mutex\x1b[0m\n");
+        printf("\x1b[32mThread 2 has locked the mutex\x1b[0m\n");
         for (int i = 0; i < 5; i++)
         {
             printf("2\n");
             sleep(1);
         }
         pthread_mutex_unlock(&mutex);
-        printf("\x1b[32mThread 2 have unlocked the mutex\x1b[0m\n");
+        printf("\x1b[32mThread 2 has unlocked the mutex\x1b[0m\n");
         sleep(1);
     }
 
-    printf("\x1b[31m\nThread 2 have been finished\x1b[0m\n");
+    printf("\x1b[31m\nThread 2 has been finished\x1b[0m\n");
     pthread_exit(NULL);
 }
 

@@ -4,7 +4,7 @@
 
 void* game1(void* flag)
 {
-  printf("\x1b[31mThread 1 have started\x1b[0m\n");
+  printf("\x1b[31mThread 1 has started\x1b[0m\n");
   int i = 1;
   sleep(2);
   while(*((int*)flag) != 0)
@@ -15,13 +15,13 @@ void* game1(void* flag)
     i++;
   }
 
-  printf("\x1b[31mThread 1 have been finished\x1b[0m\n");
+  printf("\x1b[31mThread 1 has been finished\x1b[0m\n");
   pthread_exit(NULL);
 }
 
 void* game2(void* flag)
 {
-  printf("\x1b[31mThread 2 have started\x1b[0m\n");
+  printf("\x1b[31mThread 2 has started\x1b[0m\n");
   int *res = new int;
   *res = 0;
   printf("Enter a positive number, please\n");
@@ -35,7 +35,7 @@ void* game2(void* flag)
     *res = -1;
   } 
   *((int*)flag) = 0;
-  printf("\x1b[31m\nThread 2 have been finished\x1b[0m\n");
+  printf("\x1b[31m\nThread 2 has been finished\x1b[0m\n");
   pthread_exit((void*)res);
 }
 
@@ -62,7 +62,7 @@ int main()
   {
     printf("You entered zero!\n");
   }
-  printf("The program have been f\n");
+  printf("The program has been f\n");
 
   delete out;
   delete flag;

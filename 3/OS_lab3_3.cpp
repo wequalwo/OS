@@ -13,7 +13,7 @@ int pipefd[2];
 void *thread1(void *flag)
 {
     sleep(2);
-    printf("\x1b[31mThread 1 have started\x1b[0m\n");
+    printf("\x1b[31mThread 1 has started\x1b[0m\n");
     FILE *fp;
     struct stat buff;
     if ((fp = fopen("OS_lab3_1.cpp", "rb")) == NULL)
@@ -46,18 +46,18 @@ void *thread1(void *flag)
             continue;
         }
 
-        std::cout << "Thread 1 have wrote the message.\n";
+        std::cout << "Thread 1 has wrote the message.\n";
         sleep(2);
     }
 
     close(pipefd[1]);
-    printf("\x1b[31mThread 1 have been finished\x1b[0m\n");
+    printf("\x1b[31mThread 1 has been finished\x1b[0m\n");
     pthread_exit(NULL);
 }
 
 void *thread2(void *flag)
 {
-    printf("\x1b[31mThread 2 have started.\x1b[0m\n");
+    printf("\x1b[31mThread 2 has started.\x1b[0m\n");
 
     while (*((int *)flag) != 0)
     {
@@ -77,11 +77,11 @@ void *thread2(void *flag)
                 break;
             std::cout << buf[i];
         }
-        std::cout << "Thread 2 have finished.\n";
+        std::cout << "Thread 2 has finished.\n";
         sleep(1);
     }
     close(pipefd[0]);
-    printf("\x1b[31m\nThread 2 have been finished\x1b[0m\n");
+    printf("\x1b[31m\nThread 2 has been finished\x1b[0m\n");
     pthread_exit(NULL);
 }
 
