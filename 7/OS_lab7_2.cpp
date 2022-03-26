@@ -21,20 +21,22 @@
 
 #include <mqueue.h>
 
-int flag;
+#define msg_size 256
+
+int flag = 1;
 mqd_t mq;
 
-void *thread(void *flag)
+void *thread2(void *arg)
 {
     sleep(2);
     printf("\x1b[31mThread 2 have started\x1b[0m\n");
 
     while (flag != 0)
     {
-        char buf[256];
+        char buf[msg_size];
         // std::cout << "\nThread 2 is working...\n";
 
-        int result = mq_receive(mq, buf, sizeof(buf), 0);
+        int result = mq_receive(mq, buf, msg_size, 0);
         if (result == -1)
         {
             perror("mq_receive");
@@ -50,18 +52,22 @@ void *thread(void *flag)
         std::cout << "Thread 2 have written the message.\n";
         sleep(1);
     }
+    std::cout << "Thread 2 have finished\n";
     return NULL;
 }
 
 int main()
 {
-    mq = mq_open("/mq", O_CREAT | O_RDONLY | O_NONBLOCK, 0644, NULL);
-    pthread_t th;
-    pthread_create(&th, NULL, &thread, NULL);
-    getchar();
+    struct mq_attr attr = {0, 10, msg_size, 0};
     flag = 1;
+    mq = mq_open("/mq", O_CREAT | O_RDONLY | O_NONBLOCK, 0644, &attr);
+    pthread_t th;
+    std::cout << "Prog 2 is ready\n";
+    pthread_create(&th, NULL, &thread2, NULL);
+    getchar();
+    flag = 0;
     pthread_join(th, NULL);
-    int mq_close(mq);
-    int mq_unlink(mq);
+    mq_close(mq);
+    mq_unlink("/mq");
     return 0;
 }
