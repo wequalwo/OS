@@ -48,7 +48,7 @@ void *thread1(void *arg)
             continue;
         }
         size = sprintf(buf, "The message was: \x1b[36mSize of the .cpp file is: %ld\x1b[0m, count = %d\n", buff.st_size, count);
-        for(int i = 0; i < size; i++)
+        for (int i = 0; i < size; i++)
         {
             std::cout << buf[i];
         }

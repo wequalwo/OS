@@ -33,8 +33,6 @@ void *thread2(void *arg)
     while (flag != 0)
     {
         char buf[msg_size];
-        // std::cout << "\nThread 2 is working...\n";
-
         int result = mq_receive(mq, buf, msg_size, 0);
         if (result == -1)
         {
@@ -42,7 +40,6 @@ void *thread2(void *arg)
             sleep(1);
             continue;
         }
-
         for (auto i : buf)
         {
             std::cout << i;
