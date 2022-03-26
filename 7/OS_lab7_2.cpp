@@ -28,8 +28,7 @@ mqd_t mq;
 
 void *thread2(void *arg)
 {
-    sleep(2);
-    printf("\x1b[31mThread 2 have started\x1b[0m\n");
+    printf("\x1b[31mThread 2 has started\x1b[0m\n");
 
     while (flag != 0)
     {
@@ -48,11 +47,10 @@ void *thread2(void *arg)
         {
             std::cout << i;
         }
-        std::cout << "\n";
-        std::cout << "Thread 2 have written the message.\n";
+        std::cout << "Thread 2 has written the message.\n\n";
         sleep(1);
     }
-    std::cout << "Thread 2 have finished\n";
+    std::cout << "Thread 2 has finished\n";
     return NULL;
 }
 

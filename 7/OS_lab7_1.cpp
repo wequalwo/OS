@@ -28,7 +28,7 @@ mqd_t mq;
 void *thread1(void *arg)
 {
     int count = 0;
-    printf("\x1b[31mThread 1 have started\x1b[0m\n");
+    printf("\x1b[31mThread 1 has started\x1b[0m\n");
     FILE *fp;
     struct stat buff;
     if ((fp = fopen("OS_lab7_2.cpp", "r")) == NULL)
@@ -48,6 +48,10 @@ void *thread1(void *arg)
             continue;
         }
         size = sprintf(buf, "The message was: \x1b[36mSize of the .cpp file is: %ld\x1b[0m, count = %d\n", buff.st_size, count);
+        for(int i = 0; i < size; i++)
+        {
+            std::cout << buf[i];
+        }
         int result = mq_send(mq, buf, size, 0);
         if (result == -1)
         {
@@ -55,11 +59,11 @@ void *thread1(void *arg)
             sleep(1);
             continue;
         }
-        std::cout << "Thread 1 have wrote the message.\n";
+        std::cout << "Thread 1 has wrote the message.\n\n";
         sleep(1);
         count++;
     }
-    std::cout << "Thread 1 have finished\n";
+    std::cout << "Thread 1 has finished\n";
     return NULL;
 }
 
