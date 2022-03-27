@@ -21,6 +21,8 @@
 
 #include <mqueue.h>
 #define msg_size 256
+#define my_mq_maxmsg 47 //пробуем увеличить очередь
+
 
 int flag = 1;
 mqd_t mq;
@@ -70,8 +72,11 @@ void *thread1(void *arg)
 int main()
 {
     flag = 1;
-    struct mq_attr attr = {0, 10, msg_size, 0};
+    struct mq_attr attr = {0, my_mq_maxmsg, msg_size, 0};
     mq = mq_open("/mq", O_CREAT | O_WRONLY | O_NONBLOCK, 0644, &attr);
+    int t = mq_getattr(mq, &attr);
+    std::cout << "mq_maxmsg = " << attr.mq_maxmsg << "\n";
+
     pthread_t th1;
     std::cout << "Prog 1 is ready\n";
     pthread_create(&th1, NULL, &thread1, NULL);
