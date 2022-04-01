@@ -50,7 +50,6 @@ void *thread1(void *flag)
         sleep(2);
     }
 
-    close(pipefd[1]);
     printf("\x1b[31mThread 1 has been finished\x1b[0m\n");
     pthread_exit(NULL);
 }
@@ -80,7 +79,6 @@ void *thread2(void *flag)
         std::cout << "Thread 2 has finished.\n";
         sleep(1);
     }
-    close(pipefd[0]);
     printf("\x1b[31m\nThread 2 has been finished\x1b[0m\n");
     pthread_exit(NULL);
 }
@@ -108,6 +106,8 @@ int main()
 
     pthread_join(second, NULL);
     pthread_join(first, NULL);
+    close(pipefd[1]);
+    close(pipefd[0]);
 
     delete flag1;
     delete flag2;

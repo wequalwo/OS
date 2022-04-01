@@ -145,7 +145,7 @@ void *get_connect(void *arg)
 int main()
 {
     fcntl(server, F_SETFL, O_NONBLOCK);
-    std::cout << "v.2.4\n";
+    std::cout << "v.2.5\n";
     pthread_mutex_init(&mutex1, NULL);
     // pthread_mutex_init(&mutex2, NULL);
 
@@ -182,14 +182,12 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "put a char\n" << std::flush;
-    int er = getchar();
-    std::cout << er << std::flush;
-
-    std::cout << "ending...\n";
-    // flag_connect = 1;
-    // flag_receive = 1;
-    // flag_request = 1;
+    while (getchar() == -1)
+        ;
+    flag_connect = 1;
+    flag_receive = 1;
+    flag_request = 1;
+    
     pthread_join(_connect, NULL);
     pthread_join(_request, NULL);
     pthread_join(_receive, NULL);
