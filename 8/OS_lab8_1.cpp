@@ -25,6 +25,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+
+#include <signal.h>
+typedef void (*sighandler_t)(int);
+
 #define SIZE 256
 
 int server;                       // id listener socket
@@ -51,7 +55,7 @@ int out(std::string str)
 void *get_receive(void *arg)
 {
     out("Receive has started.\n");
-    while (true)
+    while (!flag_receive)
     {
         std::memset(rcvbuf, '\0', SIZE);
         int reccount = recv(fd, rcvbuf, sizeof(rcvbuf), 0);
@@ -90,7 +94,7 @@ void *get_request(void *arg)
         exit(EXIT_FAILURE);
     }
     int size = 0;
-    while (true)
+    while (!flag_request)
     {
         pthread_mutex_lock(&mutex1);
         if (!msglist.empty())
@@ -143,6 +147,7 @@ void *get_connect(void *arg)
         if (fd < 0)
         {
             out("Server is waiting...");
+            sleep(1);
             continue;
         }
         else
@@ -156,10 +161,21 @@ void *get_connect(void *arg)
     return NULL;
 }
 
+void sig_handler(int signo)
+{
+    std::cout << "\nForce exit...\n";
+    shutdown(server, SHUT_RDWR);
+    close(server);
+    pthread_mutex_destroy(&mutex1);
+    pthread_mutex_destroy(&mutex2);
+    exit(0);
+}
+
 int main()
 {
-    fcntl(server, F_SETFL, O_NONBLOCK);
-    std::cout << "v.3.1ss\n";
+    signal(SIGPIPE, sig_handler);
+
+    std::cout << "v.5.1\n";
     pthread_mutex_init(&mutex1, NULL);
     pthread_mutex_init(&mutex2, NULL);
 
@@ -172,9 +188,10 @@ int main()
     struct sockaddr_in adr = {0};
     adr.sin_family = AF_INET;
     adr.sin_port = htons(31415);
-    int optval = 1;
 
+    int optval = 1;
     setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    fcntl(server, F_SETFL, O_NONBLOCK);
 
     int res = bind(server, (struct sockaddr *)&adr, sizeof(adr));
     if (res == -1)
@@ -183,7 +200,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    res = listen(server, 1);
+    res = listen(server, 4);
     if (res == -1)
     {
         perror("listen");
@@ -196,8 +213,11 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    while (getchar() == -1)
-        ;
+    res = getchar();
+    if (res == -1)
+    {
+        perror("getchar");
+    }
     flag_connect = 1;
     flag_receive = 1;
     flag_request = 1;

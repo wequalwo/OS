@@ -25,6 +25,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+
+#include <signal.h>
+typedef void (*sighandler_t)(int);
+
 #define SIZE 256
 
 pthread_mutex_t mutex;
@@ -48,7 +52,7 @@ void *client_sent(void *arg)
     int count = 0;
     while (flag2)
     {
-        std::memset(sndbuf,'\0', SIZE);
+        std::memset(sndbuf, '\0', SIZE);
         int size = sprintf(sndbuf, "attempt %d", count);
         int sentcount = send(client, sndbuf, size, 0);
         if (sentcount == -1)
@@ -76,7 +80,7 @@ void *client_accept(void *arg)
 {
     while (flag3)
     {
-        std::memset(rcvbuf,'\0', SIZE);
+        std::memset(rcvbuf, '\0', SIZE);
         int reccount = recv(client, rcvbuf, sizeof(rcvbuf), 0);
         if (reccount == -1)
         {
@@ -117,18 +121,31 @@ void *client_connect(void *arg)
     return NULL;
 }
 
+void sig_handler(int signo)
+{
+    std::cout << "\nForce exit...\n";
+    shutdown(client, SHUT_RDWR);
+    close(client);
+    pthread_mutex_destroy(&mutex);
+    exit(0);
+}
+
 int main()
 {
+    signal(SIGPIPE, sig_handler);
+
     pthread_mutex_init(&mutex, NULL);
     client = socket(AF_INET, SOCK_STREAM, 0);
-    fcntl(client, F_SETFL, O_NONBLOCK);
+
     int optval = 1;
     setsockopt(client, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    fcntl(client, F_SETFL, O_NONBLOCK);
 
     pthread_create(&_thread1, NULL, &client_connect, NULL);
 
     getchar();
     flag1 = flag2 = flag3 = 0;
+
     pthread_join(_thread1, NULL);
     pthread_join(_thread2, NULL);
     pthread_join(_thread3, NULL);
