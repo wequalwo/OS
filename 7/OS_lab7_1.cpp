@@ -21,7 +21,7 @@
 
 #include <mqueue.h>
 #define msg_size 256
-#define my_mq_maxmsg 47 //пробуем увеличить очередь
+#define my_mq_maxmsg 47 // an attempt to increase the capacity to such a size that all my chromosomes fit
 
 
 int flag = 1;
