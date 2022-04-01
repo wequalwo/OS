@@ -35,7 +35,7 @@ void *client_sent(void *arg)
 {
     while (flag2)
     {
-        int size = sprintf(sndbuf, "request");
+        int size = sprintf(sndbuf, "im fucking tireddd");
         int sentcount = send(client, sndbuf, size, 0);
         if (sentcount == -1)
         {
@@ -43,11 +43,11 @@ void *client_sent(void *arg)
         }
         else
         {
-            // send OK
-        }
-        for (int i = 0; i < size; i++)
-        {
-            std::cout << sndbuf[i];
+            std::cout << "the message was: ";
+            for (int i = 0; i < size; i++)
+            {
+                std::cout << sndbuf[i];
+            }
         }
         std::cout << "\n";
         sleep(1);
@@ -73,7 +73,7 @@ void *client_accept(void *arg)
             sleep(1);
         }
         std::string s = rcvbuf;
-        std::cout << s;
+        std::cout << "server answer was: " << s;
         std::cout << "\n";
     }
     return NULL;
@@ -92,39 +92,30 @@ void *client_connect(void *arg)
             continue;
         }
 
-        int res = inet_pton(AF_INET, "127.0.0.1", &adr.sin_addr);
-        if (res == 0)
-        {
-            std::cout << "fail!\n"
-                      << "\n";
-            continue;
-        }
-        else if (res = -1)
-        {
-            perror("inet_pton");
-            continue;
-        }
-        else
-        {
-            pthread_create(&_thread2, NULL, &client_accept, NULL);
-            pthread_create(&_thread3, NULL, &client_sent, NULL);
-            break;
-        }
+        pthread_create(&_thread2, NULL, &client_accept, NULL);
+        pthread_create(&_thread3, NULL, &client_sent, NULL);
+        std::cout << "connected!\n";
+        return NULL;
     }
     return NULL;
 }
 int main()
 {
     client = socket(AF_INET, SOCK_STREAM, 0);
+    fcntl(client, F_SETFL, O_NONBLOCK);
+    int optval = 1;
+    setsockopt(client, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
     pthread_create(&_thread1, NULL, &client_connect, NULL);
+
     getchar();
+    flag1 = flag2 = flag3 = 0;
     pthread_join(_thread1, NULL);
     pthread_join(_thread2, NULL);
     pthread_join(_thread3, NULL);
 
-    shutdown(client, 0 | 1);
+    shutdown(client, SHUT_RDWR);
     close(client);
-
+    std::cout << "endilg\n";
     return 0;
 }

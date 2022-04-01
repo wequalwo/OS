@@ -40,9 +40,10 @@ int fd;
 
 void *get_receive(void *arg)
 {
-    while (!flag_receive)
+    std::cout << "receive has started\n";
+    while (true)
     {
-        int reccount = recv(server, rcvbuf, sizeof(rcvbuf), 0);
+        int reccount = recv(fd, rcvbuf, sizeof(rcvbuf), 0);
         if (reccount == -1)
         {
             perror("recv");
@@ -50,29 +51,36 @@ void *get_receive(void *arg)
         }
         else if (reccount == 0)
         {
+            std::cout << "\nreccount == 0";
             sleep(1);
         }
         else
         {
+            std::cout << "\nreccount > 0\n";
             pthread_mutex_lock(&mutex1);
             std::string s = rcvbuf;
             msglist.push_back(s);
             pthread_mutex_unlock(&mutex1);
         }
+        sleep(1);
     }
     return NULL;
 }
 
 void *get_request(void *arg)
 {
-    while (!flag_request)
+    std::cout << "request has started\n";
+    while (true)
     {
         int i = 0;
         pthread_mutex_lock(&mutex1);
-        if (!msglist.empty())
-        {                                   //очередь запросов не пуста
+        if (!msglist.empty()) // очередь запросов не пуста
+        {
+            if (msglist.size() == 0)
+                continue;
             std::string S = msglist.back(); //получаем первый в очереди запрос
-            msglist.pop_back();             //удаляем его из очереди
+            std::cout << "Client message: " << S << "\n";
+            msglist.pop_back(); //удаляем его из очереди
             pthread_mutex_unlock(&mutex1);
             //выполняем функцию, которую требует задание;
             //Например, uname.
@@ -82,27 +90,32 @@ void *get_request(void *arg)
             //Добавляете к нему запрос (проверка очередности запрос-ответ.
             //Передаем его вызовом:
             int size = sprintf(sndbuf, "N = : %d", i);
-            int sentcount = send(server, sndbuf, size, 0);
+            int sentcount = send(fd, sndbuf, size, 0);
             if (sentcount == -1)
             {
+                std::cout << "sentcount == -1\n"
+                          << std::flush;
                 perror("send");
             }
             else
             {
+                std::cout << "all right" << std::flush;
                 // send OK
             }
         }
         else
         { //очередь пуста
+            std::cout << "\nempty queue\n";
             pthread_mutex_unlock(&mutex1);
-            sleep(1);
         }
+        sleep(1);
         // прочитать запрос из очереди на обработку;
         // выполнить заданную функцию;
         // передать ответ в сокет;
         // вывести результат на экран;
         i++;
     }
+    std::cout << "ended";
     return NULL;
 }
 
@@ -120,9 +133,9 @@ void *get_connect(void *arg)
         }
         else
         {
+            std::cout << "connected: " << fd << "\n";
             pthread_create(&_receive, NULL, &get_receive, NULL);
             pthread_create(&_request, NULL, &get_request, NULL);
-            std::cout << "connected: " << fd << "\n";
             break;
         }
     }
@@ -131,7 +144,8 @@ void *get_connect(void *arg)
 
 int main()
 {
-
+    fcntl(server, F_SETFL, O_NONBLOCK);
+    std::cout << "v.2.4\n";
     pthread_mutex_init(&mutex1, NULL);
     // pthread_mutex_init(&mutex2, NULL);
 
@@ -168,14 +182,18 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    getchar();
-    flag_connect = 1;
-    flag_receive = 1;
-    flag_request = 1;
+    std::cout << "put a char\n" << std::flush;
+    int er = getchar();
+    std::cout << er << std::flush;
+
+    std::cout << "ending...\n";
+    // flag_connect = 1;
+    // flag_receive = 1;
+    // flag_request = 1;
     pthread_join(_connect, NULL);
     pthread_join(_request, NULL);
     pthread_join(_receive, NULL);
-    shutdown(server, 0 | 1);
+    shutdown(server, SHUT_RDWR);
     pthread_mutex_destroy(&mutex1);
     // pthread_mutex_destroy(&mutex2);
     close(server);
