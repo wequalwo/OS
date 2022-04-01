@@ -16,6 +16,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
+#include <cstring>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -24,18 +25,30 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#define SIZE 256
+
+pthread_mutex_t mutex;
 
 int client;
 int flag1 = 1, flag2 = 1, flag3 = 1;
 pthread_t _thread1, _thread2, _thread3;
-char sndbuf[256];
-char rcvbuf[256];
+char sndbuf[SIZE];
+char rcvbuf[SIZE];
+
+int out(std::string str)
+{
+    pthread_mutex_lock(&mutex);
+    std::cout << str << "\n";
+    pthread_mutex_unlock(&mutex);
+    return 1;
+}
 
 void *client_sent(void *arg)
 {
     int count = 0;
     while (flag2)
     {
+        std::memset(sndbuf,'\0', SIZE);
         int size = sprintf(sndbuf, "attempt %d", count);
         int sentcount = send(client, sndbuf, size, 0);
         if (sentcount == -1)
@@ -44,22 +57,26 @@ void *client_sent(void *arg)
         }
         else
         {
-            std::cout << "the message was: ";
+            pthread_mutex_lock(&mutex);
+            std::cout << "The message was: \"";
             for (int i = 0; i < size; i++)
             {
                 std::cout << sndbuf[i];
             }
+            std::cout << "\"\n";
+            pthread_mutex_unlock(&mutex);
         }
-        std::cout << "\n";
         sleep(1);
         count++;
     }
     return NULL;
 }
+
 void *client_accept(void *arg)
 {
     while (flag3)
     {
+        std::memset(rcvbuf,'\0', SIZE);
         int reccount = recv(client, rcvbuf, sizeof(rcvbuf), 0);
         if (reccount == -1)
         {
@@ -71,12 +88,12 @@ void *client_accept(void *arg)
             sleep(1);
         }
         std::string s = rcvbuf;
-        std::cout << "server answer was: " << s;
-        std::cout << "\n";
+        out("Server answer was: \"" + s + "\"\n");
         sleep(1);
     }
     return NULL;
 }
+
 void *client_connect(void *arg)
 {
     struct sockaddr_in adr = {0};
@@ -88,18 +105,21 @@ void *client_connect(void *arg)
         if (res < 0)
         {
             perror("connect");
+            sleep(1);
             continue;
         }
 
         pthread_create(&_thread2, NULL, &client_accept, NULL);
         pthread_create(&_thread3, NULL, &client_sent, NULL);
-        std::cout << "connected!\n";
+        out("Server has been connected!\n");
         return NULL;
     }
     return NULL;
 }
+
 int main()
 {
+    pthread_mutex_init(&mutex, NULL);
     client = socket(AF_INET, SOCK_STREAM, 0);
     fcntl(client, F_SETFL, O_NONBLOCK);
     int optval = 1;
@@ -115,6 +135,6 @@ int main()
 
     shutdown(client, SHUT_RDWR);
     close(client);
-    std::cout << "endilg\n";
+    pthread_mutex_destroy(&mutex);
     return 0;
 }
