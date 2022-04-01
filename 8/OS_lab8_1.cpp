@@ -56,7 +56,6 @@ void *get_receive(void *arg)
         }
         else
         {
-            std::cout << "\nreccount > 0\n";
             pthread_mutex_lock(&mutex1);
             std::string s = rcvbuf;
             msglist.push_back(s);
@@ -70,16 +69,16 @@ void *get_receive(void *arg)
 void *get_request(void *arg)
 {
     std::cout << "request has started\n";
+    int count = 0;
     while (true)
     {
-        int i = 0;
         pthread_mutex_lock(&mutex1);
         if (!msglist.empty()) // очередь запросов не пуста
         {
             if (msglist.size() == 0)
                 continue;
             std::string S = msglist.back(); //получаем первый в очереди запрос
-            std::cout << "Client message: " << S << "\n";
+            std::cout << "Client's message: \"" << S << "\"\n";
             msglist.pop_back(); //удаляем его из очереди
             pthread_mutex_unlock(&mutex1);
             //выполняем функцию, которую требует задание;
@@ -89,7 +88,14 @@ void *get_request(void *arg)
             //Назовем массив sndbuf.
             //Добавляете к нему запрос (проверка очередности запрос-ответ.
             //Передаем его вызовом:
-            int size = sprintf(sndbuf, "N = : %d", i);
+            int size = sprintf(sndbuf, "N = %d", count);
+            count++;
+            std::cout << "Message to client will be: \"";
+            for (int i = 0; i < size; i++)
+            {
+                std::cout << sndbuf[i];
+            }
+            std::cout << "\"\n";
             int sentcount = send(fd, sndbuf, size, 0);
             if (sentcount == -1)
             {
@@ -97,25 +103,14 @@ void *get_request(void *arg)
                           << std::flush;
                 perror("send");
             }
-            else
-            {
-                std::cout << "all right" << std::flush;
-                // send OK
-            }
         }
         else
-        { //очередь пуста
+        {
             std::cout << "\nempty queue\n";
             pthread_mutex_unlock(&mutex1);
         }
         sleep(1);
-        // прочитать запрос из очереди на обработку;
-        // выполнить заданную функцию;
-        // передать ответ в сокет;
-        // вывести результат на экран;
-        i++;
     }
-    std::cout << "ended";
     return NULL;
 }
 
@@ -145,7 +140,7 @@ void *get_connect(void *arg)
 int main()
 {
     fcntl(server, F_SETFL, O_NONBLOCK);
-    std::cout << "v.2.5\n";
+    std::cout << "v.2.7\n";
     pthread_mutex_init(&mutex1, NULL);
     // pthread_mutex_init(&mutex2, NULL);
 
@@ -187,7 +182,7 @@ int main()
     flag_connect = 1;
     flag_receive = 1;
     flag_request = 1;
-    
+
     pthread_join(_connect, NULL);
     pthread_join(_request, NULL);
     pthread_join(_receive, NULL);

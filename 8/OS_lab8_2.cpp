@@ -33,9 +33,10 @@ char rcvbuf[256];
 
 void *client_sent(void *arg)
 {
+    int count = 0;
     while (flag2)
     {
-        int size = sprintf(sndbuf, "im fucking tireddd");
+        int size = sprintf(sndbuf, "attempt %d", count);
         int sentcount = send(client, sndbuf, size, 0);
         if (sentcount == -1)
         {
@@ -51,10 +52,7 @@ void *client_sent(void *arg)
         }
         std::cout << "\n";
         sleep(1);
-        //создать запрос;
-        //передать запрос в сокет;
-        //вывести запрос на экран;
-        //задержка на время 1 сек;
+        count++;
     }
     return NULL;
 }
@@ -75,6 +73,7 @@ void *client_accept(void *arg)
         std::string s = rcvbuf;
         std::cout << "server answer was: " << s;
         std::cout << "\n";
+        sleep(1);
     }
     return NULL;
 }
