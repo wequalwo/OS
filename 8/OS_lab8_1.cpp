@@ -32,7 +32,7 @@ typedef void (*sighandler_t)(int);
 #define SIZE 256
 
 int server;                       // id listener socket
-pthread_mutex_t mutex1, mutex2;   // mutexes id-s
+pthread_mutex_t queue_mutex, out_mutex;   // mutexes id-s
 std::vector<std::string> msglist; // request queue
 // std::vector<std::string> seglist; // sent queue
 char sndbuf[SIZE];
@@ -41,14 +41,14 @@ int flag_receive = 0; // completion flag for receiving requests
 int flag_request = 0; // the flag for the completion of the request processing thread and the transmission of responses;
 int flag_connect = 0; // connection waiting thread termination flag
 
-pthread_t _receive, _request, _connect;
+pthread_t _thread_receive, _thread_request, _thread_connect;
 int fd;
 
 int out(std::string str)
 {
-    pthread_mutex_lock(&mutex2);
+    pthread_mutex_lock(&out_mutex);
     std::cout << str << "\n";
-    pthread_mutex_unlock(&mutex2);
+    pthread_mutex_unlock(&out_mutex);
     return 1;
 }
 
@@ -71,10 +71,10 @@ void *get_receive(void *arg)
         }
         else
         {
-            pthread_mutex_lock(&mutex1);
+            pthread_mutex_lock(&queue_mutex);
             std::string s = rcvbuf;
             msglist.push_back(s);
-            pthread_mutex_unlock(&mutex1);
+            pthread_mutex_unlock(&queue_mutex);
         }
         sleep(1);
     }
@@ -96,7 +96,7 @@ void *get_request(void *arg)
     int size = 0;
     while (!flag_request)
     {
-        pthread_mutex_lock(&mutex1);
+        pthread_mutex_lock(&queue_mutex);
         if (!msglist.empty())
         {
             if (msglist.size() == 0)
@@ -104,7 +104,7 @@ void *get_request(void *arg)
             std::string S = msglist.back();
             out("Client's message: \"" + S + "\"");
             msglist.pop_back();
-            pthread_mutex_unlock(&mutex1);
+            pthread_mutex_unlock(&queue_mutex);
 
             std::memset(sndbuf, '\0', SIZE);
             stat("OS_lab3_1.cpp", &buff);
@@ -112,14 +112,14 @@ void *get_request(void *arg)
             size = sprintf(sndbuf, "\x1b[36mSize of the .cpp file is: %ld\x1b[0m, count = %d", buff.st_size, count);
             count++;
 
-            pthread_mutex_lock(&mutex2);
+            pthread_mutex_lock(&out_mutex);
             std::cout << "Message to client will be: \"";
             for (int i = 0; i < size; i++)
             {
                 std::cout << sndbuf[i];
             }
             std::cout << "\"\n\n";
-            pthread_mutex_unlock(&mutex2);
+            pthread_mutex_unlock(&out_mutex);
 
             int sentcount = send(fd, sndbuf, size, 0);
             if (sentcount == -1)
@@ -129,7 +129,7 @@ void *get_request(void *arg)
         }
         else
         {
-            pthread_mutex_unlock(&mutex1);
+            pthread_mutex_unlock(&queue_mutex);
             out("empty queue");
         }
         sleep(1);
@@ -153,8 +153,8 @@ void *get_connect(void *arg)
         else
         {
             out("Client has been connected!");
-            pthread_create(&_receive, NULL, &get_receive, NULL);
-            pthread_create(&_request, NULL, &get_request, NULL);
+            pthread_create(&_thread_receive, NULL, &get_receive, NULL);
+            pthread_create(&_thread_request, NULL, &get_request, NULL);
             break;
         }
     }
@@ -166,8 +166,8 @@ void sig_handler(int signo)
     std::cout << "\nForce exit...\n";
     shutdown(server, SHUT_RDWR);
     close(server);
-    pthread_mutex_destroy(&mutex1);
-    pthread_mutex_destroy(&mutex2);
+    pthread_mutex_destroy(&queue_mutex);
+    pthread_mutex_destroy(&out_mutex);
     exit(0);
 }
 
@@ -176,8 +176,8 @@ int main()
     signal(SIGPIPE, sig_handler);
 
     std::cout << "v.5.1\n";
-    pthread_mutex_init(&mutex1, NULL);
-    pthread_mutex_init(&mutex2, NULL);
+    pthread_mutex_init(&queue_mutex, NULL);
+    pthread_mutex_init(&out_mutex, NULL);
 
     server = socket(AF_INET, SOCK_STREAM, 0);
     if (server == -1)
@@ -206,7 +206,7 @@ int main()
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    res = pthread_create(&_connect, NULL, &get_connect, NULL);
+    res = pthread_create(&_thread_connect, NULL, &get_connect, NULL);
     if (res == -1)
     {
         perror("pthread_create");
@@ -222,12 +222,12 @@ int main()
     flag_receive = 1;
     flag_request = 1;
 
-    pthread_join(_connect, NULL);
-    pthread_join(_request, NULL);
-    pthread_join(_receive, NULL);
+    pthread_join(_thread_connect, NULL);
+    pthread_join(_thread_request, NULL);
+    pthread_join(_thread_receive, NULL);
     shutdown(server, SHUT_RDWR);
-    pthread_mutex_destroy(&mutex1);
-    pthread_mutex_destroy(&mutex2);
+    pthread_mutex_destroy(&queue_mutex);
+    pthread_mutex_destroy(&out_mutex);
     close(server);
     return 0;
 }

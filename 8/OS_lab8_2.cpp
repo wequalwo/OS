@@ -34,8 +34,8 @@ typedef void (*sighandler_t)(int);
 pthread_mutex_t mutex;
 
 int client;
-int flag1 = 1, flag2 = 1, flag3 = 1;
-pthread_t _thread1, _thread2, _thread3;
+int flag_connect = 1, flag_sent = 1, flag_accept = 1;
+pthread_t _thread_connect, _thread_accept, _thread_sent;
 char sndbuf[SIZE];
 char rcvbuf[SIZE];
 
@@ -50,7 +50,7 @@ int out(std::string str)
 void *client_sent(void *arg)
 {
     int count = 0;
-    while (flag2)
+    while (flag_sent)
     {
         std::memset(sndbuf, '\0', SIZE);
         int size = sprintf(sndbuf, "attempt %d", count);
@@ -78,7 +78,7 @@ void *client_sent(void *arg)
 
 void *client_accept(void *arg)
 {
-    while (flag3)
+    while (flag_accept)
     {
         std::memset(rcvbuf, '\0', SIZE);
         int reccount = recv(client, rcvbuf, sizeof(rcvbuf), 0);
@@ -103,7 +103,7 @@ void *client_connect(void *arg)
     struct sockaddr_in adr = {0};
     adr.sin_family = AF_INET;
     adr.sin_port = htons(31415);
-    while (flag1)
+    while (flag_connect)
     {
         int res = connect(client, (struct sockaddr *)&adr, sizeof(adr));
         if (res < 0)
@@ -113,8 +113,8 @@ void *client_connect(void *arg)
             continue;
         }
 
-        pthread_create(&_thread2, NULL, &client_accept, NULL);
-        pthread_create(&_thread3, NULL, &client_sent, NULL);
+        pthread_create(&_thread_accept, NULL, &client_accept, NULL);
+        pthread_create(&_thread_sent, NULL, &client_sent, NULL);
         out("Server has been connected!\n");
         return NULL;
     }
@@ -141,14 +141,14 @@ int main()
     setsockopt(client, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     fcntl(client, F_SETFL, O_NONBLOCK);
 
-    pthread_create(&_thread1, NULL, &client_connect, NULL);
+    pthread_create(&_thread_connect, NULL, &client_connect, NULL);
 
     getchar();
-    flag1 = flag2 = flag3 = 0;
+    flag_connect = flag_sent = flag_accept = 0;
 
-    pthread_join(_thread1, NULL);
-    pthread_join(_thread2, NULL);
-    pthread_join(_thread3, NULL);
+    pthread_join(_thread_connect, NULL);
+    pthread_join(_thread_accept, NULL);
+    pthread_join(_thread_sent, NULL);
 
     shutdown(client, SHUT_RDWR);
     close(client);
