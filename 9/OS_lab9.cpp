@@ -12,6 +12,8 @@
 #include <sys/stat.h>
 
 #define PATHNAME "test"
+
+int id = 10000;
 uid_t get_id_obj(std::string str)
 {
     struct stat buf;
@@ -21,6 +23,7 @@ uid_t get_id_obj(std::string str)
         return -1;
     }
     std::cout << str << buf.st_uid << "\n";
+    id = buf.st_uid;
     return buf.st_uid;
 }
 
@@ -169,6 +172,66 @@ int analysis(acl_entry_t entry_p)
     return 0;
 }
 
+
+int red(acl_t& list, acl_tag_t TAG, acl_perm_t PERM)
+{
+    if(TAG == ACL_USER || TAG == ACL_GROUP)
+    {
+        std::cout << "Unsupported tag\n";
+        return -1;
+    }
+    int res = 0;
+    acl_entry_t entry_p;
+    res = acl_create_entry(&list, &entry_p);
+    if (res == -1)
+    {
+        perror("acl_create_entry");
+        exit(EXIT_FAILURE);
+    }
+
+    res = acl_set_tag_type(entry_p, TAG);
+    if (res == -1)
+    {
+        perror("acl_set_tag_type");
+        exit(EXIT_FAILURE);
+    }
+
+    acl_permset_t permset_p;
+    res = acl_get_permset(entry_p, &permset_p);
+    if (res == -1)
+    {
+        perror("acl_get_permset");
+        return -1;
+    }
+    res = acl_clear_perms(permset_p);
+    if(res == -1)
+    {
+        perror("acl_clear_perms");
+        exit(EXIT_FAILURE);
+    }
+    res = acl_add_perm(permset_p, PERM);
+    if(res == -1)
+    {
+        perror("acl_add_perm");
+        exit(EXIT_FAILURE);
+    }
+    res = acl_set_permset(entry_p, permset_p);
+    if(res == -1)
+    {
+        perror("acl_set_permset");
+        exit(EXIT_FAILURE);
+    }
+    res = acl_calc_mask(&list);
+    if(res == -1)
+    {
+        perror("acl_calc_mask");
+        exit(EXIT_FAILURE);
+    }
+    return 1;
+}
+
+
+
 int main()
 {
     std::cout << "Lab 9\n";
@@ -208,56 +271,131 @@ int main()
     }
 
     getchar();
-    //acl_entry_t entry_p;
-    res = acl_create_entry(&list, &entry_p);
-    if (res == -1)
-    {
-        perror("acl_create_entry");
-        exit(EXIT_FAILURE);
-    }
 
-    res = acl_set_tag_type(entry_p, ACL_USER); // let's put ACL_USER
-    if (res == -1)
-    {
-        perror("acl_set_tag_type");
-        exit(EXIT_FAILURE);
-    }
+    // res = acl_create_entry(&list, &entry_p);
+    // if (res == -1)
+    // {
+    //     perror("acl_create_entry");
+    //     exit(EXIT_FAILURE);
+    // }
 
-    //acl_get_permset(acl_entry_t entry_d, acl_permset_t * permset_p)
+    // res = acl_set_tag_type(entry_p, ACL_MASK); // let's put ACL_MASK
+    // if (res == -1)
+    // {
+    //     perror("acl_set_tag_type");
+    //     exit(EXIT_FAILURE);
+    // }
 
-    acl_permset_t permset_p;
-    res = acl_get_permset(entry_p, &permset_p);
-    if (res == -1)
-    {
-        perror("acl_get_permset");
-        return -1;
-    }
-    res = acl_clear_perms(permset_p);
+    // acl_permset_t permset_p;
+    // res = acl_get_permset(entry_p, &permset_p);
+    // if (res == -1)
+    // {
+    //     perror("acl_get_permset");
+    //     return -1;
+    // }
+    // res = acl_clear_perms(permset_p);
+    // if(res == -1)
+    // {
+    //     perror("acl_clear_perms");
+    //     exit(EXIT_FAILURE);
+    // }
+
+
+    // res = acl_add_perm(permset_p, ACL_WRITE); //  let's give ACL_WRITE
+    // if(res == -1)
+    // {
+    //     perror("acl_add_perm");
+    //     exit(EXIT_FAILURE);
+    // }
+    // res = acl_set_permset(entry_p, permset_p);
+    // if(res == -1)
+    // {
+    //     perror("acl_set_permset");
+    //     exit(EXIT_FAILURE);
+    // }
+    // res = acl_calc_mask(&list);
+    // if(res == -1)
+    // {
+    //     perror("acl_calc_mask");
+    //     exit(EXIT_FAILURE);
+    // }
+
+
+    // acl_entry_t entry_del;
+    // acl_get_entry(list, ACL_FIRST_ENTRY, &entry_del);  
+    // acl_delete_entry(list, entry_del);
+
+
+
+    // res = acl_create_entry(&list, &entry_p);
+    // if (res == -1)
+    // {
+    //     perror("acl_create_entry");
+    //     exit(EXIT_FAILURE);
+    // }
+
+    // res = acl_set_tag_type(entry_p, ACL_USER_OBJ); // let's put ACL_USER_OBJ,
+    // if (res == -1)
+    // {
+    //     perror("acl_set_tag_type");
+    //     exit(EXIT_FAILURE);
+    // }
+
+    // //permset_p;
+    // res = acl_get_permset(entry_p, &permset_p);
+    // if (res == -1)
+    // {
+    //     perror("acl_get_permset");
+    //     return -1;
+    // }
+    // res = acl_clear_perms(permset_p);
+    // if(res == -1)
+    // {
+    //     perror("acl_clear_perms");
+    //     exit(EXIT_FAILURE);
+    // }
+
+
+    // res = acl_add_perm(permset_p, ACL_WRITE); //  let's give ACL_WRITE
+    // if(res == -1)
+    // {
+    //     perror("acl_add_perm");
+    //     exit(EXIT_FAILURE);
+    // }
+    // res = acl_set_permset(entry_p, permset_p);
+    // if(res == -1)
+    // {
+    //     perror("acl_set_permset");
+    //     exit(EXIT_FAILURE);
+    // }
+    // res = acl_calc_mask(&list);
+    // if(res == -1)
+    // {
+    //     perror("acl_calc_mask");
+    //     exit(EXIT_FAILURE);
+    // }
+
+
+
+
+
+
+
+
+
+    res = red(list, ACL_MASK, ACL_WRITE);
     if(res == -1)
     {
-        perror("acl_clear_perms");
         exit(EXIT_FAILURE);
     }
 
-    res = acl_add_perm(permset_p, ACL_WRITE);
-    if(res == -1)
-    {
-        perror("acl_add_perm");
-        exit(EXIT_FAILURE);
-    }
-    res = acl_set_permset(entry_p, permset_p);
-    if(res == -1)
-    {
-        perror("acl_set_permset");
-        exit(EXIT_FAILURE);
-    }
+    // acl_entry_t entry_del;
+    // acl_get_entry(list, ACL_FIRST_ENTRY, &entry_del);  
+    // acl_delete_entry(list, entry_del);
 
-    res = acl_calc_mask(&list);
-    if(res == -1)
-    {
-        perror("acl_calc_mask");
-        exit(EXIT_FAILURE);
-    }
+
+
+
     res = acl_valid(list);
     if(res == -1)
     {
