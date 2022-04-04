@@ -183,11 +183,11 @@ int analysis(acl_entry_t entry_p)
 
 int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM)
 {
-    // if (TAG == ACL_USER || TAG == ACL_GROUP)
-    // {
-    //     std::cout << "Unsupported tag\n";
-    //     return -1;
-    // }
+    if (TAG == ACL_USER || TAG == ACL_GROUP)
+    {
+        std::cout << "Unsupported tag\n";
+        return -1;
+    }
     int res = 0;
     acl_entry_t entry_p;
     res = acl_create_entry(&list, &entry_p);
@@ -238,8 +238,7 @@ int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM)
     return 1;
 }
 
-
-int out(acl_t list)
+void out(acl_t list)
 {
     int res = 0;
     int count = 0;
@@ -273,56 +272,11 @@ int out(acl_t list)
     }
 }
 
-
-int main()
+void del(acl_t &list)
 {
     int res = 0;
-    std::cout << "Lab 9\n";
-    acl_t list = acl_get_file(PATHNAME, ACL_TYPE_ACCESS);
-    if (list == NULL)
-    {
-        perror("acl_get_file");
-        exit(EXIT_FAILURE);
-    }
-
-met:
-    // int count = 0;
-    // acl_entry_t entry_p;
-    // res = acl_get_entry(list, ACL_FIRST_ENTRY, &entry_p);
-    // if (res == -1)
-    // {
-    //     perror("acl_get_entry");
-    //     exit(EXIT_FAILURE);
-    // }
-    // std::cout << count << "\n";
-    // analysis(entry_p);
-    // count++;
-
-    // while (true)
-    // {
-    //     res = acl_get_entry(list, ACL_NEXT_ENTRY, &entry_p);
-    //     if (res == -1)
-    //     {
-    //         perror("acl_get_entry");
-    //         exit(EXIT_FAILURE);
-    //     }
-    //     if (res == 0)
-    //     {
-    //         break;
-    //     }
-    //     std::cout << "\n"
-    //               << count << "\n";
-    //     analysis(entry_p);
-    //     count++;
-    // }
-    out(list);
-
-    getchar();
-
-    // red(list, ACL_MASK, ACL_WRITE);
-
     acl_entry_t entry_del;
-    while(true)
+    while (true)
     {
         res = acl_get_entry(list, ACL_NEXT_ENTRY, &entry_del);
         if (res == -1)
@@ -336,6 +290,41 @@ met:
         }
         acl_delete_entry(list, entry_del);
     }
+}
+
+
+int main()
+{
+    int res = 0;
+    std::cout << "Lab 9\n";
+    acl_t list = acl_get_file(PATHNAME, ACL_TYPE_ACCESS);
+    if (list == NULL)
+    {
+        perror("acl_get_file");
+        exit(EXIT_FAILURE);
+    }
+
+    out(list);
+
+    getchar();
+
+    del(list);
+
+    // acl_entry_t entry_del;
+    // while (true)
+    // {
+    //     res = acl_get_entry(list, ACL_NEXT_ENTRY, &entry_del);
+    //     if (res == -1)
+    //     {
+    //         perror("acl_get_entry");
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     if (res == 0)
+    //     {
+    //         break;
+    //     }
+    //     acl_delete_entry(list, entry_del);
+    // }
 
     // let's delete GROUP_OBJ:
     // res = acl_get_entry(list, ACL_FIRST_ENTRY, &entry_del);
@@ -346,8 +335,7 @@ met:
     red(list, ACL_GROUP_OBJ, ACL_READ);
     red(list, ACL_OTHER, ACL_READ);
 
-    std::cout << "\n\n\n";
-    goto met;
+    std::cout << "\n\n";
 
     res = acl_valid(list);
     if (res == -1)
@@ -361,6 +349,9 @@ met:
         perror("acl_set_file");
         exit(EXIT_FAILURE);
     }
+
+    std::cout << "new info:\n";
+    out(list);
 
     acl_free((void *)&list);
     return 0;
