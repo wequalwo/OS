@@ -11,7 +11,7 @@
 #include <grp.h>
 #include <sys/stat.h>
 
-#define PATHNAME "test"
+#define PATHNAME "t"
 
 int id = 10000;
 uid_t get_id_obj(std::string str)
@@ -45,6 +45,24 @@ int get_gr_name(gid_t id)
     return 0;
 }
 
+int get_us_name(gid_t id)
+{
+    struct passwd *name = getpwuid(id);
+    if (name == NULL)
+    {
+        perror("getpwuid");
+        return -1;
+    }
+    std::cout << "user name: ";
+    for (int i = 0; i < sizeof(name->pw_name) / size_t(name->pw_name[0]); i++)
+    {
+        std::cout << name->pw_name[i];
+    }
+    std::cout << std::endl
+              << std::flush;
+    return 0;
+}
+
 int analysis(acl_entry_t entry_p)
 {
     acl_tag_t tag_type_p;
@@ -65,6 +83,7 @@ int analysis(acl_entry_t entry_p)
             std::cout << "stat problems\n";
             return -1;
         }
+        get_us_name(id);
         break;
     }
     case ACL_USER:
@@ -77,17 +96,7 @@ int analysis(acl_entry_t entry_p)
             return -1;
         }
         std::cout << "user id: " << *id << "; ";
-        struct passwd *name = getpwuid((uid_t)(*id));
-        if (name == NULL)
-        {
-            perror("getpwuid");
-            return -1;
-        }
-        std::cout << "user name: ";
-        for (int i = 0; i < sizeof(name->pw_name) / size_t(name->pw_name[0]); i++)
-        {
-            std::cout << name->pw_name[i];
-        }
+        get_us_name((uid_t)(*id));
         acl_free((void *)id);
         // delete name;
         break;
@@ -172,14 +181,13 @@ int analysis(acl_entry_t entry_p)
     return 0;
 }
 
-
-int red(acl_t& list, acl_tag_t TAG, acl_perm_t PERM)
+int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM)
 {
-    if(TAG == ACL_USER || TAG == ACL_GROUP)
-    {
-        std::cout << "Unsupported tag\n";
-        return -1;
-    }
+    // if (TAG == ACL_USER || TAG == ACL_GROUP)
+    // {
+    //     std::cout << "Unsupported tag\n";
+    //     return -1;
+    // }
     int res = 0;
     acl_entry_t entry_p;
     res = acl_create_entry(&list, &entry_p);
@@ -204,25 +212,25 @@ int red(acl_t& list, acl_tag_t TAG, acl_perm_t PERM)
         return -1;
     }
     res = acl_clear_perms(permset_p);
-    if(res == -1)
+    if (res == -1)
     {
         perror("acl_clear_perms");
         exit(EXIT_FAILURE);
     }
     res = acl_add_perm(permset_p, PERM);
-    if(res == -1)
+    if (res == -1)
     {
         perror("acl_add_perm");
         exit(EXIT_FAILURE);
     }
     res = acl_set_permset(entry_p, permset_p);
-    if(res == -1)
+    if (res == -1)
     {
         perror("acl_set_permset");
         exit(EXIT_FAILURE);
     }
     res = acl_calc_mask(&list);
-    if(res == -1)
+    if (res == -1)
     {
         perror("acl_calc_mask");
         exit(EXIT_FAILURE);
@@ -231,27 +239,21 @@ int red(acl_t& list, acl_tag_t TAG, acl_perm_t PERM)
 }
 
 
-
-int main()
+int out(acl_t list)
 {
-    std::cout << "Lab 9\n";
-    acl_t list = acl_get_file(PATHNAME, ACL_TYPE_ACCESS);
-    if (list == NULL)
-    {
-        perror("acl_get_file");
-        exit(EXIT_FAILURE);
-    }
-
-    acl_entry_t entry_p;
     int res = 0;
+    int count = 0;
+    acl_entry_t entry_p;
     res = acl_get_entry(list, ACL_FIRST_ENTRY, &entry_p);
     if (res == -1)
     {
         perror("acl_get_entry");
         exit(EXIT_FAILURE);
     }
+    std::cout << count << "\n";
+    analysis(entry_p);
+    count++;
 
-    int count = 0;
     while (true)
     {
         res = acl_get_entry(list, ACL_NEXT_ENTRY, &entry_p);
@@ -269,141 +271,92 @@ int main()
         analysis(entry_p);
         count++;
     }
-
-    getchar();
-
-    // res = acl_create_entry(&list, &entry_p);
-    // if (res == -1)
-    // {
-    //     perror("acl_create_entry");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // res = acl_set_tag_type(entry_p, ACL_MASK); // let's put ACL_MASK
-    // if (res == -1)
-    // {
-    //     perror("acl_set_tag_type");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // acl_permset_t permset_p;
-    // res = acl_get_permset(entry_p, &permset_p);
-    // if (res == -1)
-    // {
-    //     perror("acl_get_permset");
-    //     return -1;
-    // }
-    // res = acl_clear_perms(permset_p);
-    // if(res == -1)
-    // {
-    //     perror("acl_clear_perms");
-    //     exit(EXIT_FAILURE);
-    // }
+}
 
 
-    // res = acl_add_perm(permset_p, ACL_WRITE); //  let's give ACL_WRITE
-    // if(res == -1)
-    // {
-    //     perror("acl_add_perm");
-    //     exit(EXIT_FAILURE);
-    // }
-    // res = acl_set_permset(entry_p, permset_p);
-    // if(res == -1)
-    // {
-    //     perror("acl_set_permset");
-    //     exit(EXIT_FAILURE);
-    // }
-    // res = acl_calc_mask(&list);
-    // if(res == -1)
-    // {
-    //     perror("acl_calc_mask");
-    //     exit(EXIT_FAILURE);
-    // }
-
-
-    // acl_entry_t entry_del;
-    // acl_get_entry(list, ACL_FIRST_ENTRY, &entry_del);  
-    // acl_delete_entry(list, entry_del);
-
-
-
-    // res = acl_create_entry(&list, &entry_p);
-    // if (res == -1)
-    // {
-    //     perror("acl_create_entry");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // res = acl_set_tag_type(entry_p, ACL_USER_OBJ); // let's put ACL_USER_OBJ,
-    // if (res == -1)
-    // {
-    //     perror("acl_set_tag_type");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // //permset_p;
-    // res = acl_get_permset(entry_p, &permset_p);
-    // if (res == -1)
-    // {
-    //     perror("acl_get_permset");
-    //     return -1;
-    // }
-    // res = acl_clear_perms(permset_p);
-    // if(res == -1)
-    // {
-    //     perror("acl_clear_perms");
-    //     exit(EXIT_FAILURE);
-    // }
-
-
-    // res = acl_add_perm(permset_p, ACL_WRITE); //  let's give ACL_WRITE
-    // if(res == -1)
-    // {
-    //     perror("acl_add_perm");
-    //     exit(EXIT_FAILURE);
-    // }
-    // res = acl_set_permset(entry_p, permset_p);
-    // if(res == -1)
-    // {
-    //     perror("acl_set_permset");
-    //     exit(EXIT_FAILURE);
-    // }
-    // res = acl_calc_mask(&list);
-    // if(res == -1)
-    // {
-    //     perror("acl_calc_mask");
-    //     exit(EXIT_FAILURE);
-    // }
-
-
-
-
-
-
-
-
-
-    res = red(list, ACL_MASK, ACL_WRITE);
-    if(res == -1)
+int main()
+{
+    int res = 0;
+    std::cout << "Lab 9\n";
+    acl_t list = acl_get_file(PATHNAME, ACL_TYPE_ACCESS);
+    if (list == NULL)
     {
+        perror("acl_get_file");
         exit(EXIT_FAILURE);
     }
 
-    // acl_entry_t entry_del;
-    // acl_get_entry(list, ACL_FIRST_ENTRY, &entry_del);  
+met:
+    // int count = 0;
+    // acl_entry_t entry_p;
+    // res = acl_get_entry(list, ACL_FIRST_ENTRY, &entry_p);
+    // if (res == -1)
+    // {
+    //     perror("acl_get_entry");
+    //     exit(EXIT_FAILURE);
+    // }
+    // std::cout << count << "\n";
+    // analysis(entry_p);
+    // count++;
+
+    // while (true)
+    // {
+    //     res = acl_get_entry(list, ACL_NEXT_ENTRY, &entry_p);
+    //     if (res == -1)
+    //     {
+    //         perror("acl_get_entry");
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     if (res == 0)
+    //     {
+    //         break;
+    //     }
+    //     std::cout << "\n"
+    //               << count << "\n";
+    //     analysis(entry_p);
+    //     count++;
+    // }
+    out(list);
+
+    getchar();
+
+    // red(list, ACL_MASK, ACL_WRITE);
+
+    acl_entry_t entry_del;
+    while(true)
+    {
+        res = acl_get_entry(list, ACL_NEXT_ENTRY, &entry_del);
+        if (res == -1)
+        {
+            perror("acl_get_entry");
+            exit(EXIT_FAILURE);
+        }
+        if (res == 0)
+        {
+            break;
+        }
+        acl_delete_entry(list, entry_del);
+    }
+
+    // let's delete GROUP_OBJ:
+    // res = acl_get_entry(list, ACL_FIRST_ENTRY, &entry_del);
     // acl_delete_entry(list, entry_del);
 
+    // let's create a new one
+    red(list, ACL_USER_OBJ, ACL_READ);
+    red(list, ACL_GROUP_OBJ, ACL_READ);
+    red(list, ACL_OTHER, ACL_READ);
 
-
+    std::cout << "\n\n\n";
+    goto met;
 
     res = acl_valid(list);
-    if(res == -1)
+    if (res == -1)
     {
         perror("acl_valid");
         exit(EXIT_FAILURE);
     }
     res = acl_set_file(PATHNAME, ACL_TYPE_ACCESS, list);
-    if(res == -1)
+    if (res == -1)
     {
         perror("acl_set_file");
         exit(EXIT_FAILURE);
