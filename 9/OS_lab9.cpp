@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 
 #define PATHNAME "t"
+#define EMPTY -314
 
 int id = 10000;
 uid_t get_id_obj(std::string str)
@@ -181,63 +182,6 @@ int analysis(acl_entry_t entry_p)
     return 0;
 }
 
-int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM)
-{
-    if (TAG == ACL_USER || TAG == ACL_GROUP)
-    {
-        std::cout << "Unsupported tag\n";
-        return -1;
-    }
-    int res = 0;
-    acl_entry_t entry_p;
-    res = acl_create_entry(&list, &entry_p);
-    if (res == -1)
-    {
-        perror("acl_create_entry");
-        exit(EXIT_FAILURE);
-    }
-
-    res = acl_set_tag_type(entry_p, TAG);
-    if (res == -1)
-    {
-        perror("acl_set_tag_type");
-        exit(EXIT_FAILURE);
-    }
-
-    acl_permset_t permset_p;
-    res = acl_get_permset(entry_p, &permset_p);
-    if (res == -1)
-    {
-        perror("acl_get_permset");
-        return -1;
-    }
-    res = acl_clear_perms(permset_p);
-    if (res == -1)
-    {
-        perror("acl_clear_perms");
-        exit(EXIT_FAILURE);
-    }
-    res = acl_add_perm(permset_p, PERM);
-    if (res == -1)
-    {
-        perror("acl_add_perm");
-        exit(EXIT_FAILURE);
-    }
-    res = acl_set_permset(entry_p, permset_p);
-    if (res == -1)
-    {
-        perror("acl_set_permset");
-        exit(EXIT_FAILURE);
-    }
-    res = acl_calc_mask(&list);
-    if (res == -1)
-    {
-        perror("acl_calc_mask");
-        exit(EXIT_FAILURE);
-    }
-    return 1;
-}
-
 void out(acl_t list)
 {
     int res = 0;
@@ -272,6 +216,74 @@ void out(acl_t list)
     }
 }
 
+int y = 0;
+
+int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM, acl_perm_t PERM2 = EMPTY)
+{
+    if (TAG == ACL_USER || TAG == ACL_GROUP)
+    {
+        std::cout << "Unsupported tag\n";
+        return -1;
+    }
+    int res = 0;
+    acl_entry_t entry_p;
+    res = acl_create_entry(&list, &entry_p);
+    if (res == -1)
+    {
+        perror("acl_create_entry");
+        exit(EXIT_FAILURE);
+    }
+
+    res = acl_set_tag_type(entry_p, TAG);
+    if (res == -1)
+    {
+        perror("acl_set_tag_type");
+        exit(EXIT_FAILURE);
+    }
+    acl_permset_t permset_p;
+    res = acl_get_permset(entry_p, &permset_p);
+    if (res == -1)
+    {
+        perror("acl_get_permset");
+        return -1;
+    }
+    res = acl_clear_perms(permset_p);
+    if (res == -1)
+    {
+        perror("acl_clear_perms");
+        exit(EXIT_FAILURE);
+    }
+    res = acl_add_perm(permset_p, PERM);
+    if (res == -1)
+    {
+        perror("acl_add_perm");
+        exit(EXIT_FAILURE);
+    }
+    if (PERM2 != EMPTY)
+    {
+        res = acl_add_perm(permset_p, PERM2);
+        if (res == -1)
+        {
+            perror("acl_add_perm");
+            exit(EXIT_FAILURE);
+        }
+    }
+    res = acl_set_permset(entry_p, permset_p);
+    if (res == -1)
+    {
+        perror("acl_set_permset");
+        exit(EXIT_FAILURE);
+    }
+
+    res = acl_calc_mask(&list);
+    if (res == -1)
+    {
+        perror("acl_calc_mask");
+        exit(EXIT_FAILURE);
+    }
+    return 1;
+}
+
 void del(acl_t &list)
 {
     int res = 0;
@@ -292,7 +304,6 @@ void del(acl_t &list)
     }
 }
 
-
 int main()
 {
     int res = 0;
@@ -308,34 +319,14 @@ int main()
 
     getchar();
 
-    del(list);
-
-    // acl_entry_t entry_del;
-    // while (true)
-    // {
-    //     res = acl_get_entry(list, ACL_NEXT_ENTRY, &entry_del);
-    //     if (res == -1)
-    //     {
-    //         perror("acl_get_entry");
-    //         exit(EXIT_FAILURE);
-    //     }
-    //     if (res == 0)
-    //     {
-    //         break;
-    //     }
-    //     acl_delete_entry(list, entry_del);
-    // }
-
-    // let's delete GROUP_OBJ:
-    // res = acl_get_entry(list, ACL_FIRST_ENTRY, &entry_del);
-    // acl_delete_entry(list, entry_del);
+    del(list); // let's delete all
 
     // let's create a new one
-    red(list, ACL_USER_OBJ, ACL_READ);
+
+    red(list, ACL_MASK, ACL_READ);
+    red(list, ACL_USER_OBJ, ACL_READ, ACL_WRITE);
     red(list, ACL_GROUP_OBJ, ACL_READ);
     red(list, ACL_OTHER, ACL_READ);
-
-    std::cout << "\n\n";
 
     res = acl_valid(list);
     if (res == -1)
