@@ -11,7 +11,7 @@
 #define PATHNAME "t"
 #define EMPTY -314
 
-int id = 10000;
+int ID = 10000;
 uid_t get_id_obj(std::string str)
 {
     struct stat buf;
@@ -21,13 +21,13 @@ uid_t get_id_obj(std::string str)
         return -1;
     }
     std::cout << "  " + str << buf.st_uid << "\n";
-    id = buf.st_uid;
+    ID = buf.st_uid;
     return buf.st_uid;
 }
 
 int get_gr_name(gid_t id)
 {
-    struct group *gr_name = gr_name = getgrgid(id);
+    struct group *gr_name = getgrgid(id);
     if (gr_name == NULL)
     {
         perror("getgrgid");
@@ -45,24 +45,26 @@ int get_gr_name(gid_t id)
 
 int get_us_name(gid_t id)
 {
-    struct passwd *name = getpwuid(id);
-    if (name == NULL)
+    struct passwd *us_name = getpwuid(id);
+    if (us_name == NULL)
     {
         perror("getpwuid");
         return -1;
     }
     std::cout << "  user name: ";
-    for (int i = 0; i < sizeof(name->pw_name) / size_t(name->pw_name[0]); i++)
+    std::cout << "\n\n\n" << sizeof(us_name->pw_name) / size_t(us_name->pw_name[0]) << "\n\n\n";
+    for (int i = 0; i < sizeof(us_name->pw_name) / size_t(us_name->pw_name[0]); i++)
     {
-        std::cout << name->pw_name[i];
+        std::cout << us_name->pw_name[i];
     }
-    std::cout << std::endl
+    std::cout << "\n"
               << std::flush;
     return 0;
 }
 
 int analysis(acl_entry_t entry_p)
 {
+    // int id = 0;
     acl_tag_t tag_type_p;
     int res = acl_get_tag_type(entry_p, &tag_type_p);
     if (res == -1)
@@ -76,24 +78,26 @@ int analysis(acl_entry_t entry_p)
     case ACL_USER_OBJ:
     {
         std::cout << "ACL_USER_OBJ\n";
-        if (get_id_obj("user_obj id: ") == -1)
+        unsigned int id = 0;
+        id = get_id_obj("user_obj id: ");
+        if (id == -1)
         {
             std::cout << "stat problems\n";
             return -1;
         }
-        get_us_name(id);
+        get_us_name((uid_t)id);
         break;
     }
     case ACL_USER:
     {
-        std::cout << "ACL_USER; ";
+        std::cout << "ACL_USER\n";
         unsigned int *id = (unsigned int *)acl_get_qualifier(entry_p);
         if (id == NULL)
         {
             perror("acl_get_qualifier");
             return -1;
         }
-        std::cout << "user id: " << *id << "; ";
+        std::cout << "  user id: " << *id << "\n";
         get_us_name((uid_t)(*id));
         acl_free((void *)id);
         // delete name;
@@ -215,13 +219,8 @@ void out(acl_t list)
 
 int y = 0;
 
-int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM, acl_perm_t PERM2 = EMPTY)
+int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM, acl_perm_t PERM2 = EMPTY, int _ID = ID)
 {
-    if (TAG == ACL_USER || TAG == ACL_GROUP) // because i did not manage to understand how to create other user/group ID
-    {
-        std::cout << "Unsupported tag\n";
-        return -1;
-    }
     int res = 0;
     acl_entry_t entry_p;
     res = acl_create_entry(&list, &entry_p);
@@ -236,6 +235,10 @@ int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM, acl_perm_t PERM2 = EMPTY)
     {
         perror("acl_set_tag_type");
         exit(EXIT_FAILURE);
+    }
+    if (TAG == ACL_USER || TAG == ACL_GROUP)
+    {
+        acl_set_qualifier(entry_p, (const void *)(&_ID));
     }
     acl_permset_t permset_p;
     res = acl_get_permset(entry_p, &permset_p);
@@ -322,6 +325,7 @@ int main()
     red(list, ACL_MASK, ACL_READ);
     red(list, ACL_USER_OBJ, ACL_READ, ACL_WRITE);
     red(list, ACL_GROUP_OBJ, ACL_READ);
+    red(list, ACL_USER, ACL_READ);
     red(list, ACL_OTHER, ACL_READ);
 
     res = acl_valid(list);
