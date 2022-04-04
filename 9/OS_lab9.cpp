@@ -1,11 +1,8 @@
 #include <iostream>
-
 #include <stdio.h>
 #include <sys/errno.h>
-
 #include <sys/acl.h>
 #include <acl/libacl.h>
-
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
@@ -23,7 +20,7 @@ uid_t get_id_obj(std::string str)
         perror("stat");
         return -1;
     }
-    std::cout << str << buf.st_uid << "\n";
+    std::cout << "  " + str << buf.st_uid << "\n";
     id = buf.st_uid;
     return buf.st_uid;
 }
@@ -36,7 +33,7 @@ int get_gr_name(gid_t id)
         perror("getgrgid");
         return -1;
     }
-    std::cout << "group name: ";
+    std::cout << "  group name: ";
     for (int i = 0; i < sizeof(gr_name->gr_name) / sizeof(gr_name->gr_name[0]); i++)
     {
         std::cout << gr_name->gr_name[i];
@@ -54,7 +51,7 @@ int get_us_name(gid_t id)
         perror("getpwuid");
         return -1;
     }
-    std::cout << "user name: ";
+    std::cout << "  user name: ";
     for (int i = 0; i < sizeof(name->pw_name) / size_t(name->pw_name[0]); i++)
     {
         std::cout << name->pw_name[i];
@@ -73,7 +70,7 @@ int analysis(acl_entry_t entry_p)
         perror("acl_get_tag_type");
         return -1;
     }
-    std::cout << "Type: ";
+    std::cout << "  Type: ";
     switch (tag_type_p)
     {
     case ACL_USER_OBJ:
@@ -145,7 +142,7 @@ int analysis(acl_entry_t entry_p)
         perror("acl_get_permset");
         return -1;
     }
-    std::cout << "Access type: ";
+    std::cout << "  Access type: ";
     res = acl_get_perm(permset_p, ACL_READ);
     if (res == -1)
     {
@@ -220,7 +217,7 @@ int y = 0;
 
 int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM, acl_perm_t PERM2 = EMPTY)
 {
-    if (TAG == ACL_USER || TAG == ACL_GROUP)
+    if (TAG == ACL_USER || TAG == ACL_GROUP) // because i did not manage to understand how to create other user/group ID
     {
         std::cout << "Unsupported tag\n";
         return -1;
@@ -322,7 +319,6 @@ int main()
     del(list); // let's delete all
 
     // let's create a new one
-
     red(list, ACL_MASK, ACL_READ);
     red(list, ACL_USER_OBJ, ACL_READ, ACL_WRITE);
     red(list, ACL_GROUP_OBJ, ACL_READ);
@@ -341,7 +337,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "new info:\n";
+    std::cout << "\n\x1b[31mNew info:\n\x1b[0m";
     out(list);
 
     acl_free((void *)&list);
