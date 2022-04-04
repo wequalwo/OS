@@ -20,9 +20,9 @@ uid_t get_id_obj(std::string str)
         perror("stat");
         return -1;
     }
-    std::cout << "  " + str << buf.st_uid << "\n";
-    ID = buf.st_uid;
-    return buf.st_uid;
+    std::cout << "  " + str << buf.st_gid << "\n";
+    ID = buf.st_gid;
+    return buf.st_gid;
 }
 
 int get_gr_name(gid_t id)
@@ -52,8 +52,7 @@ int get_us_name(gid_t id)
         return -1;
     }
     std::cout << "  user name: ";
-    std::cout << "\n\n\n" << sizeof(us_name->pw_name) / size_t(us_name->pw_name[0]) << "\n\n\n";
-    for (int i = 0; i < sizeof(us_name->pw_name) / size_t(us_name->pw_name[0]); i++)
+    for (int i = 0; i < sizeof(us_name->pw_name) / sizeof(us_name->pw_name[0]); i++)
     {
         std::cout << us_name->pw_name[i];
     }
@@ -79,13 +78,7 @@ int analysis(acl_entry_t entry_p)
     {
         std::cout << "ACL_USER_OBJ\n";
         unsigned int id = 0;
-        id = get_id_obj("user_obj id: ");
-        if (id == -1)
-        {
-            std::cout << "stat problems\n";
-            return -1;
-        }
-        get_us_name((uid_t)id);
+        get_us_name(get_id_obj("user_obj id: "));
         break;
     }
     case ACL_USER:
@@ -107,11 +100,6 @@ int analysis(acl_entry_t entry_p)
     {
         std::cout << "ACL_GROUP_OBJ\n";
         int id = get_id_obj("group_obj id: ");
-        if (id == -1)
-        {
-            std::cout << "stat problems\n";
-            return -1;
-        }
         get_gr_name(id);
         break;
     }
@@ -216,8 +204,6 @@ void out(acl_t list)
         count++;
     }
 }
-
-int y = 0;
 
 int red(acl_t &list, acl_tag_t TAG, acl_perm_t PERM, acl_perm_t PERM2 = EMPTY, int _ID = ID)
 {
