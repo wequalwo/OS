@@ -133,7 +133,7 @@ int analysis(acl_entry_t entry_p)
         return -1;
     }
     std::cout << "Access type: ";
-        res = acl_get_perm(permset_p, ACL_READ);
+    res = acl_get_perm(permset_p, ACL_READ);
     if (res == -1)
     {
         perror("acl_get_perm");
@@ -207,26 +207,69 @@ int main()
         count++;
     }
 
-
     getchar();
-    acl_entry_t entry_p;
+    //acl_entry_t entry_p;
     res = acl_create_entry(&list, &entry_p);
-    if(res == -1)
+    if (res == -1)
     {
         perror("acl_create_entry");
         exit(EXIT_FAILURE);
     }
 
-    res = acl_set_tag_type(entry_p, ACL_USER); // ACL_USER
-    if(res == -1)
+    res = acl_set_tag_type(entry_p, ACL_USER); // let's put ACL_USER
+    if (res == -1)
     {
         perror("acl_set_tag_type");
         exit(EXIT_FAILURE);
     }
 
+    //acl_get_permset(acl_entry_t entry_d, acl_permset_t * permset_p)
 
+    acl_permset_t permset_p;
+    res = acl_get_permset(entry_p, &permset_p);
+    if (res == -1)
+    {
+        perror("acl_get_permset");
+        return -1;
+    }
+    res = acl_clear_perms(permset_p);
+    if(res == -1)
+    {
+        perror("acl_clear_perms");
+        exit(EXIT_FAILURE);
+    }
 
+    res = acl_add_perm(permset_p, ACL_WRITE);
+    if(res == -1)
+    {
+        perror("acl_add_perm");
+        exit(EXIT_FAILURE);
+    }
+    res = acl_set_permset(entry_p, permset_p);
+    if(res == -1)
+    {
+        perror("acl_set_permset");
+        exit(EXIT_FAILURE);
+    }
 
+    res = acl_calc_mask(&list);
+    if(res == -1)
+    {
+        perror("acl_calc_mask");
+        exit(EXIT_FAILURE);
+    }
+    res = acl_valid(list);
+    if(res == -1)
+    {
+        perror("acl_valid");
+        exit(EXIT_FAILURE);
+    }
+    res = acl_set_file(PATHNAME, ACL_TYPE_ACCESS, list);
+    if(res == -1)
+    {
+        perror("acl_set_file");
+        exit(EXIT_FAILURE);
+    }
 
     acl_free((void *)&list);
     return 0;
