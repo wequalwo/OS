@@ -12,7 +12,7 @@
 #define EMPTY -314
 
 int ID = 10000;
-uid_t get_id_obj(std::string str)
+uid_t get_id_obj(std::string str, acl_tag_t TAG)
 {
     struct stat buf;
     if (stat(PATHNAME, &buf) == -1)
@@ -20,9 +20,15 @@ uid_t get_id_obj(std::string str)
         perror("stat");
         return -1;
     }
-    std::cout << "  " + str << buf.st_gid << "\n";
-    ID = buf.st_gid;
-    return buf.st_gid;
+    gid_t id = buf.st_uid;
+    if (TAG == ACL_GROUP_OBJ)
+    {
+        id = buf.st_gid;
+    }
+
+    std::cout << "  " + str << id << "\n";
+    ID = id;
+    return id;
 }
 
 int get_gr_name(gid_t id)
@@ -78,7 +84,7 @@ int analysis(acl_entry_t entry_p)
     {
         std::cout << "ACL_USER_OBJ\n";
         unsigned int id = 0;
-        get_us_name(get_id_obj("user_obj id: "));
+        get_us_name(get_id_obj("user_obj id: ", ACL_USER_OBJ));
         break;
     }
     case ACL_USER:
@@ -99,7 +105,7 @@ int analysis(acl_entry_t entry_p)
     case ACL_GROUP_OBJ:
     {
         std::cout << "ACL_GROUP_OBJ\n";
-        int id = get_id_obj("group_obj id: ");
+        int id = get_id_obj("group_obj id: ", ACL_GROUP_OBJ);
         get_gr_name(id);
         break;
     }
