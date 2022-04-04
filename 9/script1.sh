@@ -1,3 +1,4 @@
+#!/bin/bash
 getfacl t
 setfacl -m u:wequalwo:rwx t
 getfacl t
