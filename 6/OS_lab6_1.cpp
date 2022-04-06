@@ -59,7 +59,7 @@ int main()
 {
 
     //std::signal(SIGINT, sig_handler);
-    int fd_shm = shm_open("bonjour.txt", O_CREAT | O_RDWR, 0644);
+    int fd_shm = shm_open("/bonjour", O_CREAT | O_RDWR, 0644);
 
     sem_w = sem_open("write", O_CREAT, 0644, 0);
     sem_r = sem_open("read", O_CREAT, 0644, 0);
@@ -90,7 +90,7 @@ int main()
 
     sem_close(sem_w);
     sem_close(sem_r);
-    sem_unlink("bonjour.txt");
+    sem_unlink("/bonjour");
 
     return 0;
 }
