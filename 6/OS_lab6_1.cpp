@@ -84,13 +84,14 @@ int main()
 
     munmap(addr, SIZE);
     close(fd_shm);
-    shm_unlink("bonjour.txt");
+    shm_unlink("/bonjour");
 
     delete[] buf;
 
     sem_close(sem_w);
     sem_close(sem_r);
-    sem_unlink("/bonjour");
+    sem_unlink("read");
+    sem_unlink("write");
 
     return 0;
 }
