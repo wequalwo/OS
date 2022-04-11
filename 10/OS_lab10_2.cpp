@@ -4,8 +4,7 @@
 #include <vector>
 #include <fcntl.h>
 
-#define SIZE 16384
-#define I 5
+#define SIZE 16384 // because we can't get size after allocating
 
 ucontext_t *uctx_func1;
 ucontext_t *uctx_func2;
@@ -69,30 +68,41 @@ int main()
     int flags = fcntl(STDIN_FILENO, F_GETFL);
     fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
+
+    // allocating stacks:
     char *func1_stack = new char[SIZE];
     char *func2_stack = new char[SIZE];
     char *disp_stack = new char[SIZE];
 
+
+    // allocating size for descriptors
     uctx_func1 = new ucontext_t;
     uctx_func2 = new ucontext_t;
     uctx_disp = new ucontext_t;
     uctx_main = new ucontext_t;
 
+
+    // creating coroutines
+
+    // 1
     getcontext(uctx_func1);
     (*uctx_func1).uc_stack.ss_sp = (void *)func1_stack;
     (*uctx_func1).uc_stack.ss_size = SIZE;
     makecontext(uctx_func1, func1, 0);
 
+    // 2
     getcontext(uctx_func2);
     (*uctx_func2).uc_stack.ss_sp = (void *)func2_stack;
     (*uctx_func2).uc_stack.ss_size = SIZE;
     makecontext(uctx_func2, func2, 0);
 
+    // dispetcher
     getcontext(uctx_disp);
     (*uctx_disp).uc_stack.ss_sp = (void *)disp_stack;
     (*uctx_disp).uc_stack.ss_size = SIZE;
     makecontext(uctx_disp, disp, 0);
 
+    // creating main context
     getcontext(uctx_main);
 
     std::cout << "Swap context: M->disp\n";

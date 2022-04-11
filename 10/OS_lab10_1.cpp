@@ -45,6 +45,7 @@ void func2(void)
 
 int main()
 {
+    // allocating stacks:
     char *func1_stack = new char[SIZE];
     char *func2_stack = new char[SIZE];
 
