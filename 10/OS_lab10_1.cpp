@@ -1,6 +1,7 @@
 #include <iostream>
 #include <ucontext.h>
 #include <unistd.h>
+#include <vector>
 
 #define SIZE 16384
 
