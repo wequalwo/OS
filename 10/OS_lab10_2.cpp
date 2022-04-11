@@ -49,8 +49,10 @@ void func2(void)
 
 void disp(void)
 {
+    // let's create a queue of co-progs:
     ucontext_t *uctx_funca = uctx_func2;
     readyList = {uctx_func1};
+    
     while (true)
     {
         std::cout << "Disp is choosing\n";
