@@ -37,6 +37,7 @@ void func2(void)
         ch = getchar();
         if (ch == 10)
         {
+            std::cout << "Enter pressed: 2->M\n";
             swapcontext(uctx_func2, uctx_main);
         }
         else
@@ -52,7 +53,7 @@ void disp(void)
     // let's create a queue of co-progs:
     ucontext_t *uctx_funca = uctx_func2;
     readyList = {uctx_func1};
-    
+
     while (true)
     {
         std::cout << "Disp is choosing\n";
