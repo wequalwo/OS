@@ -55,7 +55,7 @@ void disp(void)
 
     while (true)
     {
-        std::cout << "Disp is choosing\n";
+        std::cout << "Disp is choosing...\n";
         readyList.push_back(uctx_funca);
         uctx_funca = readyList.front();
         readyList.erase(readyList.begin());
