@@ -49,25 +49,32 @@ int main()
     char *func1_stack = new char[SIZE];
     char *func2_stack = new char[SIZE];
 
+    // allocating size for descriptors
     uctx_func1 = new ucontext_t;
     uctx_func2 = new ucontext_t;
     uctx_main = new ucontext_t;
 
+    // creating coroutines
+
+    // 1
     getcontext(uctx_func1);
     (*uctx_func1).uc_stack.ss_sp = (void *)func1_stack;
     (*uctx_func1).uc_stack.ss_size = SIZE;
     makecontext(uctx_func1, func1, 0);
 
+    // 2
     getcontext(uctx_func2);
     (*uctx_func2).uc_stack.ss_sp = (void *)func2_stack;
     (*uctx_func2).uc_stack.ss_size = SIZE;
     makecontext(uctx_func2, func2, 0);
 
+    // creating main context
     getcontext(uctx_main);
 
     std::cout << "Swap context: M->1\n";
     swapcontext(uctx_main, uctx_func1);
 
+    // deleting 
     delete uctx_func1;
     delete uctx_func2;
     delete uctx_main;
