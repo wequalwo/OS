@@ -46,10 +46,10 @@ void disp(void)
     while (count < I)
     {
         std::cout << "Disp is choosing\n";
-        readyList.push_back(uctx_funca);    //приостанавливаемую сопрограмму - в конец очереди
-        uctx_funca = readyList.front();     //получаем новую сопрограмму – первую в очереди
-        readyList.erase(readyList.begin()); //исключаем новую сопрограмму из очереди
-        swapcontext(uctx_disp, uctx_funca); //передаем управление новой сопрограмме.
+        readyList.push_back(uctx_funca);
+        uctx_funca = readyList.front();
+        readyList.erase(readyList.begin());
+        swapcontext(uctx_disp, uctx_funca);
         count++;
     }
     swapcontext(uctx_disp, uctx_main);
