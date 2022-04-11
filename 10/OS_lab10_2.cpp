@@ -4,7 +4,7 @@
 #include <vector>
 #include <fcntl.h>
 
-#define SIZE 16384 // because we can't get size after allocating
+#define SIZE 16384 // because we can't get size after allocating, but we have to know it
 
 ucontext_t *uctx_func1;
 ucontext_t *uctx_func2;
