@@ -2,6 +2,7 @@
 #include <ucontext.h>
 #include <unistd.h>
 #include <vector>
+#include <fcntl.h>
 
 #define SIZE 16384
 #define I 5
@@ -27,36 +28,44 @@ void func1(void)
 
 void func2(void)
 {
-    while (1)
+    int ch;
+    while (true)
     {
         std::cout << "2\n"
                   << std::flush;
         sleep(1);
-        std::cout << "Swap context: 2->disp\n";
-        swapcontext(uctx_func2, uctx_disp);
+        ch = getchar();
+        if (ch == 10)
+        {
+            swapcontext(uctx_func2, uctx_main);
+        }
+        else
+        {
+            std::cout << "Swap context: 2->disp\n";
+            swapcontext(uctx_func2, uctx_disp);
+        }
     }
 }
 
 void disp(void)
 {
-    int count = 0;
-
     ucontext_t *uctx_funca = uctx_func2;
     readyList = {uctx_func1};
-    while (count < I)
+    while (true)
     {
         std::cout << "Disp is choosing\n";
         readyList.push_back(uctx_funca);
         uctx_funca = readyList.front();
         readyList.erase(readyList.begin());
         swapcontext(uctx_disp, uctx_funca);
-        count++;
     }
-    swapcontext(uctx_disp, uctx_main);
 }
 
 int main()
 {
+    int flags = fcntl(STDIN_FILENO, F_GETFL);
+    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+
     char *func1_stack = new char[SIZE];
     char *func2_stack = new char[SIZE];
     char *disp_stack = new char[SIZE];
@@ -94,6 +103,8 @@ int main()
     delete[] func1_stack;
     delete[] func2_stack;
     delete[] disp_stack;
+
+    fcntl(STDIN_FILENO, F_SETFL, flags);
 
     std::cout << "The prog has finished\n";
     return 0;
